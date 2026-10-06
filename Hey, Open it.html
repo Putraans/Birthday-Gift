@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Ulang Tahun!</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg) scale(1.05); }
+            50% { transform: rotate(5deg) scale(1.05); }
+        }
+        .animate-wiggle {
+            animation: wiggle 0.6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .shimmer-text {
+            background: linear-gradient(to right, #d4af37 20%, #ffdf00 40%, #d4af37 60%, #ffdf00 80%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 10px 40px 0 rgba(212, 175, 55, 0.15);
+        }
+
+        .fade-transition {
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .lux-bg {
+            background: linear-gradient(-45deg, #fdfbfb, #fceabb, #ffecd2, #fcb69f);
+            background-size: 300% 300%;
+            animation: gradientBG 15s ease infinite;
+        }
+        
+        .hidden-layer { display: none !important; }
+        .layer-enter { animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .layer-exit { animation: fadeOutUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOutUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-40px); }
+        }
+
+        /* Pulse untuk tombol play */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .play-btn-pulse::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; right: 0; bottom: 0;
+            border-radius: 9999px;
+            border: 2px solid #d4af37;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 overflow-x-hidden flex flex-col items-center justify-center lux-bg">
+
+    <!-- Posisi off-screen agar tidak mengganggu layout tapi tetap terdeteksi oleh browser -->
+    <!-- Musik dari file lokal: taruh file musik.mp3 di folder yang sama dengan file HTML ini -->
+    <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+
+    <!-- Floating Music Control Indicator -->
+    <div id="music-indicator" class="fixed top-4 right-4 z-50 hidden items-center gap-2 bg-white/80 backdrop-blur-md border border-yellow-300 px-4 py-2 rounded-full shadow-lg text-xs font-bold text-yellow-700 animate-bounce">
+        <span>🎵 4bout - first and last</span>
+    </div>
+
+    <!-- LAYAR 1: TAMPILAN AWAL UNTUK MEMUTAR MUSIK -->
+    <div id="intro-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md fade-transition">
+        <div class="glass-card p-10 md:p-14 rounded-3xl text-center max-w-md mx-4 relative overflow-hidden flex flex-col items-center shadow-2xl">
+            <div class="absolute inset-0 bg-gradient-to-br from-yellow-100/50 to-pink-100/50 pointer-events-none"></div>
+            
+            <div class="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-yellow-200 animate-float">
+                <span class="text-4xl">🎵</span>
+            </div>
+            
+            <h1 class="font-serif text-3xl font-bold text-gray-800 mb-3 relative z-10">
+                Halo,!
+            </h1>
+            <p class="text-gray-600 mb-8 font-medium relative z-10">
+                Nyalakan suara untuk pengalaman terbaik ya. Ada sesuatu untukmu! ✨
+            </p>
+            
+            <button id="start-music-btn" class="relative z-10 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 play-btn-pulse">
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Putar Musik & Lanjut</span>
+            </button>
+            <p id="loading-text" class="text-sm text-yellow-600 mt-4 hidden animate-pulse font-semibold">Menyiapkan kejutannya...</p>
+        </div>
+    </div>
+
+    <!-- LAYAR 2: KADO KEJUTAN (Disembunyikan pada awalnya) -->
+    <div id="gift-screen" class="fixed inset-0 z-40 flex-col items-center justify-center bg-white/40 backdrop-blur-sm fade-transition hidden-layer">
+        <h1 class="font-serif text-3xl md:text-5xl font-bold text-gray-800 mb-8 text-center px-4 animate-float mt-10">
+            A Special Gift For You... <span class="text-yellow-500">✨</span>
+        </h1>
+        
+        <button id="open-gift-btn" class="relative group outline-none focus:outline-none hover:animate-wiggle transition-transform duration-300 transform hover:scale-110 mt-10">
+            <svg class="w-40 h-40 drop-shadow-2xl filter drop-shadow-[0_10px_20px_rgba(212,175,55,0.4)]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 7V22" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
+                <path d="M2 11H22" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 7C12 7 8 2 5.5 3C3 4 5 7 12 7Z" fill="#fff" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M12 7C12 7 16 2 18.5 3C21 4 19 7 12 7Z" fill="#fff" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+                <rect x="3" y="11" width="18" height="11" rx="1" fill="#fffaf0" stroke="#d4af37" stroke-width="1.5"/>
+                <rect x="2" y="7" width="20" height="4" rx="1" fill="#fff" stroke="#d4af37" stroke-width="1.5"/>
+            </svg>
+            <div class="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-max text-gray-800 font-bold bg-white/90 border border-yellow-300 px-5 py-2 rounded-full text-sm opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                Klik untuk membuka ✨
+            </div>
+        </button>
+    </div>
+
+    <!-- LAYAR 3: ISI SURAT BERLAPIS -->
+    <div id="main-content" class="w-full max-w-3xl px-4 py-12 hidden opacity-0 translate-y-10 fade-transition flex-col items-center relative z-30">
+        
+        <div class="text-center mb-10 animate-float">
+            <h1 class="font-serif text-5xl md:text-7xl font-extrabold shimmer-text mb-4 drop-shadow-sm pb-2">
+                Happy Birthday!
+            </h1>
+            <p class="text-2xl md:text-3xl text-gray-600 font-semibold italic">
+                
+            </p>
+        </div>
+
+        <div id="layer-container" class="w-full relative min-h-[400px] flex flex-col items-center">
+            
+            <!-- Layer 1 -->
+            <div id="layer-1" class="glass-card w-full rounded-3xl p-10 md:p-14 mb-6 relative overflow-hidden text-center group shadow-[0_15px_50px_rgba(212,175,55,0.2)] layer-enter">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse"></div>
+                <div class="relative z-10 text-lg md:text-xl leading-relaxed text-gray-700 font-medium flex flex-col items-center">
+                    <p class="mb-6 font-serif text-3xl text-gray-800 font-bold">
+                        Doa & Harapan ✨
+                    </p>
+                    <p class="mb-5">
+                        Selamat bertambah usia, manusia hebat! Di lembaran barumu ini, aku berdoa semoga setiap langkahmu selalu diiringi kebahagiaan dan kedamaian hati.
+                    </p>
+                    <p class="mb-8">
+                        Semoga kamu selalu sehat, dilancarkan rezekinya, dan dijauhkan dari hal-hal yang bikin kamu sedih.
+                    </p>
+                    <button class="next-layer-btn mt-4 bg-white/80 hover:bg-white text-yellow-700 font-bold py-3 px-8 rounded-full border border-yellow-300 shadow-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2" data-next="layer-2">
+                        <span>Lanjut</span>
+                        <span>💌</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Layer 2 -->
+            <div id="layer-2" class="glass-card w-full rounded-3xl p-10 md:p-14 mb-6 relative overflow-hidden text-center group shadow-[0_15px_50px_rgba(212,175,55,0.2)] hidden-layer">
+                <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse" style="animation-delay: 1s;"></div>
+                <div class="relative z-10 text-lg md:text-xl leading-relaxed text-gray-700 font-medium flex flex-col items-center">
+                    <p class="mb-6 font-serif text-3xl text-gray-800 font-bold">
+                        Apresiasi 🌷
+                    </p>
+                    <p class="mb-5">
+                        Makasih ya udah lahir ke dunia ini dan jadi orang yang luar biasa. Makasih juga selalu sabar, penyayang, dan bertahan sejauh ini, so proud!
+                    </p>
+                    <p class="mb-8">
+                        dan hari ini,
+                            ketika umurmu bertambah satu halaman lagi,
+                            aku tidak ingin memberimu
+                            doa-doa yang terlalu besar.
+                            aku hanya berharap
+                            malam-malam yang biasanya panjang
+                            menjadi sedikit lebih ramah,
+                            dan ada hari-hari
+                            yang tidak membuatmu harus
+                            berpura-pura baik-baik saja—
+                    </p>
+                    <button class="next-layer-btn mt-4 bg-white/80 hover:bg-white text-yellow-700 font-bold py-3 px-8 rounded-full border border-yellow-300 shadow-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2" data-next="layer-3">
+                        <span>Satu langkah lagi</span>
+                        <span>👀</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Layer 3 -->
+            <div id="layer-3" class="glass-card w-full rounded-3xl p-10 md:p-14 mb-6 relative overflow-hidden text-center group shadow-[0_15px_50px_rgba(212,175,55,0.2)] hidden-layer">
+                <div class="absolute top-0 left-0 -mt-10 -ml-10 w-40 h-40 bg-orange-200 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse"></div>
+                <div class="absolute bottom-0 right-0 -mb-10 -mr-10 w-40 h-40 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-pulse" style="animation-delay: 0.5s;"></div>
+                
+                <div class="relative z-10 text-lg md:text-xl leading-relaxed text-gray-700 font-medium flex flex-col items-center">
+                    <p class="mb-6 font-serif text-3xl text-gray-800 font-bold">
+                        Puncak Kejutan 🥂
+                    </p>
+                    <p class="mb-5">
+                        Semoga semua yang kamu semogakan segera terwujud. Enjoy your very special day!
+                    </p>
+                    
+                    <div class="mt-4 pt-6 border-t border-yellow-500/20 w-full mb-10">
+                        <p class="text-sm uppercase tracking-widest text-gray-400 mb-1">With Love & Best Wishes,</p>
+                        <p class="font-serif text-2xl text-yellow-600 italic">
+                            China Ganteng
+                        </p>
+                    </div>
+                    
+                    <button id="hug-btn" class="bg-white/90 border border-yellow-400 text-gray-800 font-bold py-4 px-10 rounded-full shadow-[0_5px_15px_rgba(212,175,55,0.2)] transform transition-all duration-300 hover:scale-105 active:scale-95 text-lg flex items-center gap-3 hover:bg-yellow-50">
+                        <span>Make a Wish!</span>
+                        <span class="text-2xl">🎂</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Pemutar musik dari file lokal (musik.mp3), otomatis loop
+        function startMusic() {
+            const audio = document.getElementById('bg-music');
+            audio.loop = true;
+            audio.volume = 1;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    const ind = document.getElementById('music-indicator');
+                    ind.classList.remove('hidden');
+                    ind.classList.add('flex');
+                }).catch((err) => {
+                    console.error('Musik gagal diputar (pastikan file musik.mp3 ada di folder yang sama):', err);
+                });
+            }
+        }
+        document.getElementById('bg-music').addEventListener('error', () => {
+            console.error('File musik.mp3 tidak ditemukan. Taruh di folder yang sama dengan file HTML ini.');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const introScreen = document.getElementById('intro-screen');
+            const startMusicBtn = document.getElementById('start-music-btn');
+            const loadingText = document.getElementById('loading-text');
+            
+            const giftScreen = document.getElementById('gift-screen');
+            const mainContent = document.getElementById('main-content');
+            const openGiftBtn = document.getElementById('open-gift-btn');
+            const hugBtn = document.getElementById('hug-btn');
+
+            // FUNGSI 1: TOMBOL MULAI & PUTAR MUSIK
+            startMusicBtn.addEventListener('click', () => {
+                // Sembunyikan teks tombol, tampilkan teks loading sebentar
+                startMusicBtn.querySelector('span').innerText = 'Memutar...';
+                loadingText.classList.remove('hidden');
+                
+                
+                // Putar lagu dari file musik.mp3
+                startMusic();
+
+                // Setelah klik play, pindah ke layar kado dengan transisi yang lembut
+                setTimeout(() => {
+                    introScreen.style.opacity = '0';
+                    introScreen.style.transform = 'scale(1.05)';
+                    
+                    setTimeout(() => {
+                        introScreen.style.display = 'none';
+                        
+                        // Tampilkan layar kado
+                        giftScreen.classList.remove('hidden-layer');
+                        giftScreen.style.display = 'flex';
+                        
+                        // Beri sedikit jeda agar transisi CSS-nya terasa
+                        setTimeout(() => {
+                            giftScreen.style.opacity = '1';
+                        }, 50);
+                        
+                    }, 800); // Tunggu animasi fade out selesai
+                }, 500); // Jeda setengah detik agar terkesan sistem sedang "menyiapkan"
+            });
+
+            // Fungsi efek ledakan kertas (Confetti)
+            const fireConfetti = () => {
+                var duration = 3 * 1000;
+                var end = Date.now() + duration;
+                const luxColors = ['#d4af37', '#ffdf00', '#c0c0c0', '#b76e79', '#ffffff'];
+
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: luxColors
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: luxColors
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            };
+
+            // FUNGSI 2: SAAT KADO DIKLIK
+            openGiftBtn.addEventListener('click', () => {
+                // Tembakkan confetti
+                fireConfetti();
+                
+                // Hilangkan kado
+                giftScreen.style.opacity = '0';
+                giftScreen.style.transform = 'scale(1.1)';
+                
+                // Tampilkan isi surat
+                setTimeout(() => {
+                    giftScreen.style.display = 'none';
+                    mainContent.classList.remove('hidden');
+                    void mainContent.offsetWidth; // Trigger reflow
+                    mainContent.classList.remove('opacity-0', 'translate-y-10');
+                }, 800);
+            });
+
+            // FUNGSI 3: NAVIGASI ANTAR LAYER (Chapter)
+            const nextBtns = document.querySelectorAll('.next-layer-btn');
+            nextBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const currentLayer = this.closest('[id^="layer-"]');
+                    const nextLayerId = this.getAttribute('data-next');
+                    const nextLayer = document.getElementById(nextLayerId);
+
+                    currentLayer.classList.remove('layer-enter');
+                    currentLayer.classList.add('layer-exit');
+
+                    setTimeout(() => {
+                        currentLayer.classList.add('hidden-layer');
+                        currentLayer.classList.remove('layer-exit');
+                        
+                        if (nextLayer) {
+                            nextLayer.classList.remove('hidden-layer');
+                            nextLayer.classList.add('layer-enter');
+                            
+                            // Efek confetti kecil setiap ganti halaman
+                            confetti({
+                                particleCount: 30,
+                                spread: 60,
+                                origin: { y: 0.7 },
+                                zIndex: 100,
+                                colors: ['#d4af37', '#ffdf00', '#ffffff', '#ffb6c1']
+                            });
+                        }
+                    }, 450);
+                });
+            });
+
+            // FUNGSI 4: TOMBOL "MAKE A WISH"
+            hugBtn.addEventListener('click', () => {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.6 },
+                    zIndex: 100,
+                    colors: ['#d4af37', '#ffdf00', '#c0c0c0', '#b76e79', '#ffffff']
+                });
+                
+                const originalText = hugBtn.innerHTML;
+                hugBtn.innerHTML = '<span>Semoga Terkabul! ✨</span>';
+                
+                setTimeout(() => {
+                    hugBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
